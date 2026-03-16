@@ -116,3 +116,5 @@ Contains service classes for business logic:
 ## License
 
 This project is licensed under the MIT License.
+
+## link frontend: https://github.com/boakang/Inventory_OrderSyncManagementSystem_frontend
