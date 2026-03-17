@@ -11,6 +11,8 @@ namespace Inventory_OrderSyncManagementSystem.Models
         public string Status { get; set; } = string.Empty;
         public DateTime LastModified { get; set; }
 
+        public virtual Customer? Customer { get; set; }
+
         public virtual ICollection<OrderDetail> OrderDetails { get; set; } = new List<OrderDetail>();
     }
 }

@@ -1,92 +1,101 @@
 # Entity Relationship Diagram (ERD)
 
-## Overview
-The database for the Inventory and Order Management System is designed to be in 3rd Normal Form (3NF) to ensure data integrity and minimize redundancy. Below is the high-level structure of the database.
+Tài liệu này mô tả schema hiện tại theo EF Core migration `InitialCreate` (20260317044512).
 
-## Entities and Relationships
+## Bảng (tables)
 
-### 1. Products
-- **Table Name**: `Products`
-- **Attributes**:
-  - `ProductID` (Primary Key)
-  - `Name`
-  - `Description`
-  - `Price`
-  - `StockQuantity`
-  - `CreatedDate`
-  - `ModifiedDate`
+- `Categories`
+- `Customers`
+- `Suppliers`
+- `Products`
+- `Orders`
+- `OrderDetails`
+- `InventoryTransactions`
 
-### 2. Customers
-- **Table Name**: `Customers`
-- **Attributes**:
-  - `CustomerID` (Primary Key)
-  - `FirstName`
-  - `LastName`
-  - `Email`
-  - `Phone`
-  - `Address`
-  - `CreatedDate`
-  - `ModifiedDate`
+## ERD (Mermaid)
 
-### 3. Orders
-- **Table Name**: `Orders`
-- **Attributes**:
-  - `OrderID` (Primary Key)
-  - `CustomerID` (Foreign Key to `Customers`)
-  - `OrderDate`
-  - `TotalAmount`
-  - `Status`
+```mermaid
+erDiagram
+    CATEGORIES {
+        int CategoryID PK
+        string Name "nullable"
+        string Description "nullable"
+    }
 
-### 4. OrderDetails
-- **Table Name**: `OrderDetails`
-- **Attributes**:
-  - `OrderDetailID` (Primary Key)
-  - `OrderID` (Foreign Key to `Orders`)
-  - `ProductID` (Foreign Key to `Products`)
-  - `Quantity`
-  - `UnitPrice`
-  - `TotalPrice`
+    CUSTOMERS {
+        int CustomerID PK
+        string FirstName
+        string LastName
+        string Email "unique, nvarchar(256)"
+        string Phone
+        string Address
+        datetime CreatedDate
+        datetime ModifiedDate
+        datetime LastModified
+    }
 
-### 5. InventoryTransactions
-- **Table Name**: `InventoryTransactions`
-- **Attributes**:
-  - `TransactionID` (Primary Key)
-  - `ProductID` (Foreign Key to `Products`)
-  - `TransactionType` (e.g., "Stock In", "Stock Out")
-  - `Quantity`
-  - `TransactionDate`
+    SUPPLIERS {
+        int SupplierID PK
+        string Name
+        string ContactInfo
+        datetime CreatedDate
+        datetime ModifiedDate
+        datetime LastModified
+    }
 
-## Relationships
-- `Products` has a one-to-many relationship with `OrderDetails`.
-- `Customers` has a one-to-many relationship with `Orders`.
-- `Orders` has a one-to-many relationship with `OrderDetails`.
-- `Products` has a one-to-many relationship with `InventoryTransactions`.
+    PRODUCTS {
+        int ProductID PK
+        string Name
+        string Description
+        decimal Price
+        int StockQuantity
+        datetime CreatedDate
+        datetime ModifiedDate
+        datetime LastModified
+    }
 
-## ERD Diagram
+    ORDERS {
+        int OrderID PK
+        int CustomerID FK
+        datetime OrderDate
+        decimal TotalAmount
+        string Status
+        datetime LastModified
+    }
 
-The following entities and relationships are part of the Inventory and Order Management System:
+    ORDERDETAILS {
+        int OrderDetailID PK
+        int OrderID FK
+        int ProductID FK
+        int Quantity
+        decimal UnitPrice
+        decimal TotalPrice
+    }
 
-### Entities
-1. **Products**
-   - Attributes: ProductID, Name, Description, Price, StockQuantity, CreatedDate, ModifiedDate
+    INVENTORYTRANSACTIONS {
+        int TransactionID PK
+        int ProductID FK
+        string TransactionType
+        int Quantity
+        datetime TransactionDate
+    }
 
-2. **Customers**
-   - Attributes: CustomerID, FirstName, LastName, Email, Phone, Address, CreatedDate, ModifiedDate
+    ORDERS ||--o{ ORDERDETAILS : contains
 
-3. **Orders**
-   - Attributes: OrderID, CustomerID, OrderDate, TotalAmount, Status
+    CUSTOMERS ||--o{ ORDERS : places
+    PRODUCTS ||--o{ ORDERDETAILS : item
+    PRODUCTS ||--o{ INVENTORYTRANSACTIONS : logs
+```
 
-4. **OrderDetails**
-   - Attributes: OrderDetailID, OrderID, ProductID, Quantity, UnitPrice, TotalPrice
+## Ghi chú quan trọng
 
-5. **InventoryTransactions**
-   - Attributes: TransactionID, ProductID, TransactionType, Quantity, TransactionDate
+FK được tạo trong DB (đã enforce bằng migration bổ sung):
 
-### Relationships
-- Products → OrderDetails (1:N)
-- Customers → Orders (1:N)
-- Orders → OrderDetails (1:N)
-- Products → InventoryTransactions (1:N)
+- `Orders.CustomerID` → `Customers.CustomerID` (Restrict)
+- `OrderDetails.OrderID` → `Orders.OrderID` (Cascade)
+- `OrderDetails.ProductID` → `Products.ProductID` (Restrict)
+- `InventoryTransactions.ProductID` → `Products.ProductID` (Restrict)
 
-### Diagram
-A visual representation of the ERD can be created using tools like dbdiagram.io or similar.
+Ràng buộc unique:
+
+- `Customers.Email` (unique index `IX_Customers_Email`)

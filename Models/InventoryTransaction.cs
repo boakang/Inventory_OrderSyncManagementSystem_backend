@@ -10,5 +10,7 @@ namespace Inventory_OrderSyncManagementSystem.Models
         public string TransactionType { get; set; } = string.Empty;
         public int Quantity { get; set; }
         public DateTime TransactionDate { get; set; } = DateTime.Now;
+
+        public virtual Product? Product { get; set; }
     }
 }

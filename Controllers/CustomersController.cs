@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Inventory_OrderSyncManagementSystem.Models;
 using Inventory_OrderSyncManagementSystem.Services;
+using Microsoft.EntityFrameworkCore;
 
 namespace Inventory_OrderSyncManagementSystem.Controllers
 {
@@ -54,12 +55,22 @@ namespace Inventory_OrderSyncManagementSystem.Controllers
         [HttpDelete("{id}")]
         public IActionResult DeleteCustomer(int id)
         {
-            var isDeleted = _customerService.DeleteCustomer(id);
-            if (!isDeleted)
+            try
             {
-                return NotFound();
+                var isDeleted = _customerService.DeleteCustomer(id);
+                if (!isDeleted)
+                {
+                    return NotFound();
+                }
+                return NoContent();
             }
-            return NoContent();
+            catch (DbUpdateException)
+            {
+                return BadRequest(new
+                {
+                    error = "Cannot delete customer because there are related orders."
+                });
+            }
         }
     }
 }

@@ -43,6 +43,15 @@ namespace Inventory_OrderSyncManagementSystem.Services
 
         public ProductDto AddProduct(ProductDto productDto)
         {
+            if (productDto.Price < 0)
+            {
+                throw new ArgumentException("Price must be >= 0.");
+            }
+            if (productDto.StockQuantity < 0)
+            {
+                throw new ArgumentException("StockQuantity must be >= 0.");
+            }
+
             var product = new Product
             {
                 Name = productDto.Name ?? string.Empty,
@@ -67,6 +76,15 @@ namespace Inventory_OrderSyncManagementSystem.Services
             if (existingProduct == null)
             {
                 throw new KeyNotFoundException("Product not found.");
+            }
+
+            if (productDto.Price < 0)
+            {
+                throw new ArgumentException("Price must be >= 0.");
+            }
+            if (productDto.StockQuantity < 0)
+            {
+                throw new ArgumentException("StockQuantity must be >= 0.");
             }
 
             existingProduct.Name = productDto.Name ?? existingProduct.Name;
@@ -94,4 +112,4 @@ namespace Inventory_OrderSyncManagementSystem.Services
             return true;
         }
     }
-}
+}

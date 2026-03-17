@@ -1,57 +1,96 @@
 # Data Dictionary
 
-## Overview
-This document provides a detailed description of the tables, columns, and relationships in the Inventory and Order Management System database.
+Tài liệu này mô tả chi tiết bảng/cột theo EF Core migration `InitialCreate` (20260317044512).
 
-## Tables
+Ghi chú:
 
-### 1. Products
-- **Description**: Stores product information.
-- **Columns**:
-  - `ProductID` (INT, Primary Key): Unique identifier for each product.
-  - `Name` (NVARCHAR(100)): Name of the product.
-  - `Description` (NVARCHAR(MAX)): Description of the product.
-  - `Price` (DECIMAL(18,2)): Price of the product.
-  - `StockQuantity` (INT): Quantity available in stock.
-  - `CreatedDate` (DATETIME): Date the product was created.
-  - `ModifiedDate` (DATETIME): Date the product was last modified.
+- Kiểu dữ liệu string trong migration hiện tại là `nvarchar(max)`.
+- Cột thời gian dùng `datetime2`.
+- `OrderDetails.TotalPrice` hiện là cột lưu (không phải computed column).
+- Các ràng buộc không âm có thể bật bằng script `db_constraints.sql`.
 
-### 2. Customers
-- **Description**: Stores customer information.
-- **Columns**:
-  - `CustomerID` (INT, Primary Key): Unique identifier for each customer.
-  - `FirstName` (NVARCHAR(50)): First name of the customer.
-  - `LastName` (NVARCHAR(50)): Last name of the customer.
-  - `Email` (NVARCHAR(100)): Email address of the customer.
-  - `Phone` (NVARCHAR(15)): Phone number of the customer.
-  - `Address` (NVARCHAR(MAX)): Address of the customer.
-  - `CreatedDate` (DATETIME): Date the customer was created.
-  - `ModifiedDate` (DATETIME): Date the customer was last modified.
+## 1) Categories
 
-### 3. Orders
-- **Description**: Stores order information.
-- **Columns**:
-  - `OrderID` (INT, Primary Key): Unique identifier for each order.
-  - `CustomerID` (INT, Foreign Key): References `Customers.CustomerID`.
-  - `OrderDate` (DATETIME): Date the order was placed.
-  - `TotalAmount` (DECIMAL(18,2)): Total amount of the order.
-  - `Status` (NVARCHAR(20)): Status of the order (e.g., Pending, Completed).
+| Column | Type | Null | Key | Description |
+|---|---|---:|---|---|
+| CategoryID | int (IDENTITY) | NO | PK | Khoá chính danh mục |
+| Name | nvarchar(max) | YES |  | Tên danh mục |
+| Description | nvarchar(max) | YES |  | Mô tả |
 
-### 4. OrderDetails
-- **Description**: Stores details of each order.
-- **Columns**:
-  - `OrderDetailID` (INT, Primary Key): Unique identifier for each order detail.
-  - `OrderID` (INT, Foreign Key): References `Orders.OrderID`.
-  - `ProductID` (INT, Foreign Key): References `Products.ProductID`.
-  - `Quantity` (INT): Quantity of the product ordered.
-  - `UnitPrice` (DECIMAL(18,2)): Price per unit of the product.
-  - `TotalPrice` (COMPUTED): Calculated as `Quantity * UnitPrice`.
+## 2) Suppliers
 
-### 5. InventoryTransactions
-- **Description**: Stores inventory transaction history.
-- **Columns**:
-  - `TransactionID` (INT, Primary Key): Unique identifier for each transaction.
-  - `ProductID` (INT, Foreign Key): References `Products.ProductID`.
-  - `TransactionType` (NVARCHAR(20)): Type of transaction (e.g., Stock In, Stock Out).
-  - `Quantity` (INT): Quantity involved in the transaction.
-  - `TransactionDate` (DATETIME): Date of the transaction.
+| Column | Type | Null | Key | Description |
+|---|---|---:|---|---|
+| SupplierID | int (IDENTITY) | NO | PK | Khoá chính NCC |
+| Name | nvarchar(max) | NO |  | Tên nhà cung cấp |
+| ContactInfo | nvarchar(max) | NO |  | Thông tin liên hệ |
+| CreatedDate | datetime2 | NO |  | Ngày tạo |
+| ModifiedDate | datetime2 | NO |  | Ngày sửa |
+| LastModified | datetime2 | NO |  | Dùng cho delta sync |
+
+## 3) Customers
+
+| Column | Type | Null | Key | Description |
+|---|---|---:|---|---|
+| CustomerID | int (IDENTITY) | NO | PK | Khoá chính khách hàng |
+| FirstName | nvarchar(max) | NO |  | Họ |
+| LastName | nvarchar(max) | NO |  | Tên |
+| Email | nvarchar(256) | NO | UQ | Email (unique index `IX_Customers_Email`) |
+| Phone | nvarchar(max) | NO |  | SĐT |
+| Address | nvarchar(max) | NO |  | Địa chỉ |
+| CreatedDate | datetime2 | NO |  | Ngày tạo |
+| ModifiedDate | datetime2 | NO |  | Ngày sửa |
+| LastModified | datetime2 | NO |  | Dùng cho delta sync |
+
+## 4) Products
+
+| Column | Type | Null | Key | Description |
+|---|---|---:|---|---|
+| ProductID | int (IDENTITY) | NO | PK | Khoá chính sản phẩm |
+| Name | nvarchar(max) | NO |  | Tên sản phẩm |
+| Description | nvarchar(max) | NO |  | Mô tả |
+| Price | decimal(18,2) | NO |  | Giá bán (khuyến nghị `>= 0`) |
+| StockQuantity | int | NO |  | Tồn kho hiện tại (khuyến nghị `>= 0`) |
+| CreatedDate | datetime2 | NO |  | Ngày tạo |
+| ModifiedDate | datetime2 | NO |  | Ngày sửa |
+| LastModified | datetime2 | NO |  | Dùng cho delta sync |
+
+## 5) Orders
+
+| Column | Type | Null | Key | Description |
+|---|---|---:|---|---|
+| OrderID | int (IDENTITY) | NO | PK | Khoá chính đơn hàng |
+| CustomerID | int | NO | FK | FK tới Customers.CustomerID (Restrict) |
+| OrderDate | datetime2 | NO |  | Ngày đặt hàng |
+| TotalAmount | decimal(18,2) | NO |  | Tổng tiền đơn |
+| Status | nvarchar(max) | NO |  | Trạng thái (Pending/Completed/...) |
+| LastModified | datetime2 | NO |  | Dùng cho delta sync |
+
+## 6) OrderDetails
+
+| Column | Type | Null | Key | Description |
+|---|---|---:|---|---|
+| OrderDetailID | int (IDENTITY) | NO | PK | Khoá chính chi tiết đơn |
+| OrderID | int | NO | FK | FK tới Orders.OrderID (Cascade) |
+| ProductID | int | NO | FK | FK tới Products.ProductID (Restrict) |
+| Quantity | int | NO |  | Số lượng (khuyến nghị `>= 0`) |
+| UnitPrice | decimal(18,2) | NO |  | Đơn giá tại thời điểm đặt |
+| TotalPrice | decimal(18,2) | NO |  | Thành tiền (được tính và lưu bởi backend) |
+
+## 7) InventoryTransactions
+
+| Column | Type | Null | Key | Description |
+|---|---|---:|---|---|
+| TransactionID | int (IDENTITY) | NO | PK | Khoá chính giao dịch tồn kho |
+| ProductID | int | NO | FK | FK tới Products.ProductID (Restrict) |
+| TransactionType | nvarchar(max) | NO |  | Loại giao dịch (Stock In/Stock Out/Issue/Sales Order/...) |
+| Quantity | int | NO |  | Số lượng (khuyến nghị `>= 0`) |
+| TransactionDate | datetime2 | NO |  | Thời gian giao dịch |
+
+## Relationships (tóm tắt)
+
+- FK trong DB:
+	- `Orders.CustomerID` → `Customers.CustomerID`
+	- `OrderDetails.OrderID` → `Orders.OrderID`
+	- `OrderDetails.ProductID` → `Products.ProductID`
+	- `InventoryTransactions.ProductID` → `Products.ProductID`

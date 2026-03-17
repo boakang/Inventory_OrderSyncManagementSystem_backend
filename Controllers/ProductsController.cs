@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Inventory_OrderSyncManagementSystem.Models;
 using Inventory_OrderSyncManagementSystem.Services;
+using Microsoft.EntityFrameworkCore;
 
 namespace Inventory_OrderSyncManagementSystem.Controllers
 {
@@ -36,30 +37,58 @@ namespace Inventory_OrderSyncManagementSystem.Controllers
         [HttpPost]
         public IActionResult AddProduct([FromBody] ProductDto productDto)
         {
-            var product = _productService.AddProduct(productDto);
-            return CreatedAtAction(nameof(GetProductById), new { id = product.ProductID }, product);
+            try
+            {
+                var product = _productService.AddProduct(productDto);
+                return CreatedAtAction(nameof(GetProductById), new { id = product.ProductID }, product);
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { error = ex.Message });
+            }
         }
 
         [HttpPut("{id}")]
         public IActionResult UpdateProduct(int id, [FromBody] ProductDto productDto)
         {
-            var updatedProduct = _productService.UpdateProduct(id, productDto);
-            if (updatedProduct == null)
+            try
+            {
+                var updatedProduct = _productService.UpdateProduct(id, productDto);
+                if (updatedProduct == null)
+                {
+                    return NotFound();
+                }
+                return Ok(updatedProduct);
+            }
+            catch (KeyNotFoundException)
             {
                 return NotFound();
             }
-            return Ok(updatedProduct);
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { error = ex.Message });
+            }
         }
 
         [HttpDelete("{id}")]
         public IActionResult DeleteProduct(int id)
         {
-            var isDeleted = _productService.DeleteProduct(id);
-            if (!isDeleted)
+            try
             {
-                return NotFound();
+                var isDeleted = _productService.DeleteProduct(id);
+                if (!isDeleted)
+                {
+                    return NotFound();
+                }
+                return NoContent();
             }
-            return NoContent();
+            catch (DbUpdateException)
+            {
+                return BadRequest(new
+                {
+                    error = "Cannot delete product because there are related records (orders or inventory transactions)."
+                });
+            }
         }
     }
 }

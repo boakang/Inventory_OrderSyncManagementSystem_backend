@@ -41,11 +41,20 @@ namespace Inventory_OrderSyncManagementSystem.Services
         public IEnumerable<InventoryDto> GetCurrentInventoryLevels()
         {
             return _context.InventoryTransactions
-                .GroupBy(it => it.ProductID)
+                .Select(it => new
+                {
+                    it.ProductID,
+                    SignedQuantity = (it.TransactionType == "Stock Out"
+                        || it.TransactionType == "Issue"
+                        || it.TransactionType.StartsWith("Sales Order"))
+                        ? -(it.Quantity < 0 ? -it.Quantity : it.Quantity)
+                        : (it.Quantity < 0 ? -it.Quantity : it.Quantity)
+                })
+                .GroupBy(x => x.ProductID)
                 .Select(g => new InventoryDto
                 {
                     ProductID = g.Key,
-                    Quantity = g.Sum(it => it.Quantity)
+                    Quantity = g.Sum(x => x.SignedQuantity)
                 })
                 .ToList();
         }
@@ -79,6 +88,51 @@ namespace Inventory_OrderSyncManagementSystem.Services
             }
 
             throw new ArgumentException("Invalid period. Use 'daily' or 'monthly'.");
+        }
+
+        public IEnumerable<object> GetRevenuePoints(string period)
+        {
+            if (period == "daily")
+            {
+                var rows = _context.Orders
+                    .GroupBy(o => o.OrderDate.Date)
+                    .Select(g => new
+                    {
+                        Date = g.Key,
+                        Revenue = g.Sum(o => o.TotalAmount)
+                    })
+                    .OrderBy(x => x.Date)
+                    .ToList();
+
+                return rows
+                    .Select(x => new
+                    {
+                        name = x.Date.ToString("yyyy-MM-dd"),
+                        revenue = x.Revenue
+                    })
+                    .ToList();
+            }
+
+            // default monthly
+            var monthlyRows = _context.Orders
+                .GroupBy(o => new { o.OrderDate.Year, o.OrderDate.Month })
+                .Select(g => new
+                {
+                    g.Key.Year,
+                    g.Key.Month,
+                    Revenue = g.Sum(o => o.TotalAmount)
+                })
+                .OrderBy(x => x.Year)
+                .ThenBy(x => x.Month)
+                .ToList();
+
+            return monthlyRows
+                .Select(x => new
+                {
+                    name = $"{x.Year}-{x.Month:00}",
+                    revenue = x.Revenue
+                })
+                .ToList();
         }
 
         public IEnumerable<object> GetProductTransactionHistory(int productId)

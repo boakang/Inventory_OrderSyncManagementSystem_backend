@@ -97,7 +97,7 @@ namespace Inventory_OrderSyncManagementSystem.Services
                     _context.InventoryTransactions.Add(new InventoryTransaction
                     {
                         ProductID = detail.ProductID,
-                        Quantity = -detail.Quantity,
+                        Quantity = detail.Quantity,
                         TransactionDate = DateTime.Now,
                         TransactionType = "Sales Order"
                     });
@@ -122,7 +122,7 @@ namespace Inventory_OrderSyncManagementSystem.Services
             var existingOrder = _context.Orders.Find(id);
             if (existingOrder == null) return null;
 
-            existingOrder.Status = orderDto.Status;
+            existingOrder.Status = orderDto.Status ?? existingOrder.Status;
             existingOrder.LastModified = DateTime.Now;
 
             _context.SaveChanges();

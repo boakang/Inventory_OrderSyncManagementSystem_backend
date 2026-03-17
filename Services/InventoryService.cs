@@ -10,6 +10,16 @@ namespace Inventory_OrderSyncManagementSystem.Services
     {
         private readonly AppDbContext _context;
 
+        private static bool IsOutboundTransactionType(string? transactionType)
+        {
+            if (string.IsNullOrWhiteSpace(transactionType)) return false;
+            var t = transactionType.Trim();
+
+            return t.Equals("Stock Out", StringComparison.OrdinalIgnoreCase)
+                || t.Equals("Issue", StringComparison.OrdinalIgnoreCase)
+                || t.StartsWith("Sales Order", StringComparison.OrdinalIgnoreCase);
+        }
+
         public InventoryService(AppDbContext context)
         {
             _context = context;
@@ -18,19 +28,35 @@ namespace Inventory_OrderSyncManagementSystem.Services
         public IEnumerable<InventoryDto> GetAllInventory()
         {
             return _context.InventoryTransactions
-                .GroupBy(it => it.ProductID)
+                .Select(it => new
+                {
+                    it.ProductID,
+                    AbsQuantity = it.Quantity < 0 ? -it.Quantity : it.Quantity,
+                    SignedQuantity = (it.TransactionType == "Stock Out"
+                        || it.TransactionType == "Issue"
+                        || it.TransactionType.StartsWith("Sales Order"))
+                        ? -(it.Quantity < 0 ? -it.Quantity : it.Quantity)
+                        : (it.Quantity < 0 ? -it.Quantity : it.Quantity)
+                })
+                .GroupBy(x => x.ProductID)
                 .Select(g => new InventoryDto
                 {
                     ProductID = g.Key,
-                    Quantity = g.Sum(it => it.Quantity)
-                }).ToList();
+                    Quantity = g.Sum(x => x.SignedQuantity)
+                })
+                .ToList();
         }
 
         public InventoryDto? GetInventoryByProductId(int productId)
         {
             var totalQuantity = _context.InventoryTransactions
                 .Where(it => it.ProductID == productId)
-                .Sum(it => it.Quantity);
+                .Select(it => (it.TransactionType == "Stock Out"
+                    || it.TransactionType == "Issue"
+                    || it.TransactionType.StartsWith("Sales Order"))
+                    ? -(it.Quantity < 0 ? -it.Quantity : it.Quantity)
+                    : (it.Quantity < 0 ? -it.Quantity : it.Quantity))
+                .Sum();
 
             return new InventoryDto
             {
@@ -41,22 +67,42 @@ namespace Inventory_OrderSyncManagementSystem.Services
 
         public InventoryDto AddInventory(InventoryDto inventoryDto)
         {
+            if (inventoryDto.Quantity < 0)
+            {
+                throw new ArgumentException("Quantity must be >= 0.");
+            }
+
+            var transactionType = string.IsNullOrWhiteSpace(inventoryDto.TransactionType)
+                ? "Adjustment"
+                : inventoryDto.TransactionType.Trim();
+
+            var absQuantity = Math.Abs(inventoryDto.Quantity);
+            var isOutbound = IsOutboundTransactionType(transactionType);
+            var delta = isOutbound ? -absQuantity : absQuantity;
+
             var transaction = new InventoryTransaction
             {
                 ProductID = inventoryDto.ProductID,
-                Quantity = inventoryDto.Quantity,
+                Quantity = absQuantity,
                 TransactionDate = DateTime.Now,
-                TransactionType = inventoryDto.TransactionType ?? "Adjustment"
+                TransactionType = transactionType
             };
 
             _context.InventoryTransactions.Add(transaction);
 
             var product = _context.Products.Find(inventoryDto.ProductID);
-            if (product != null)
+            if (product == null)
             {
-                product.StockQuantity += inventoryDto.Quantity;
-                product.LastModified = DateTime.Now;
+                throw new KeyNotFoundException($"Product {inventoryDto.ProductID} not found.");
             }
+
+            if (product.StockQuantity + delta < 0)
+            {
+                throw new InvalidOperationException("Insufficient stock. Stock cannot go below 0.");
+            }
+
+            product.StockQuantity += delta;
+            product.LastModified = DateTime.Now;
 
             _context.SaveChanges();
             return inventoryDto;
@@ -65,6 +111,7 @@ namespace Inventory_OrderSyncManagementSystem.Services
         public InventoryDto? UpdateInventory(int productId, InventoryDto inventoryDto)
         {
             // UpdateInventory usually means creating a new transaction to adjust the quantity
+            inventoryDto.ProductID = productId;
             return AddInventory(inventoryDto);
         }
 
@@ -88,7 +135,7 @@ namespace Inventory_OrderSyncManagementSystem.Services
             var transaction = new InventoryTransaction
             {
                 ProductID = productId,
-                Quantity = -quantity,
+                Quantity = quantity,
                 TransactionDate = DateTime.Now,
                 TransactionType = "Issue"
             };

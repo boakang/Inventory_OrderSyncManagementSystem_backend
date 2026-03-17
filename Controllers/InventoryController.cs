@@ -36,19 +36,49 @@ namespace Inventory_OrderSyncManagementSystem.Controllers
         [HttpPost]
         public IActionResult AddInventory([FromBody] InventoryDto inventoryDto)
         {
-            var inventoryItem = _inventoryService.AddInventory(inventoryDto);
-            return CreatedAtAction(nameof(GetInventoryByProductId), new { productId = inventoryItem.ProductID }, inventoryItem);
+            try
+            {
+                var inventoryItem = _inventoryService.AddInventory(inventoryDto);
+                return CreatedAtAction(nameof(GetInventoryByProductId), new { productId = inventoryItem.ProductID }, inventoryItem);
+            }
+            catch (KeyNotFoundException)
+            {
+                return NotFound();
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { error = ex.Message });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { error = ex.Message });
+            }
         }
 
         [HttpPut("{productId}")]
         public IActionResult UpdateInventory(int productId, [FromBody] InventoryDto inventoryDto)
         {
-            var updatedInventory = _inventoryService.UpdateInventory(productId, inventoryDto);
-            if (updatedInventory == null)
+            try
+            {
+                var updatedInventory = _inventoryService.UpdateInventory(productId, inventoryDto);
+                if (updatedInventory == null)
+                {
+                    return NotFound();
+                }
+                return Ok(updatedInventory);
+            }
+            catch (KeyNotFoundException)
             {
                 return NotFound();
             }
-            return Ok(updatedInventory);
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { error = ex.Message });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { error = ex.Message });
+            }
         }
 
         [HttpDelete("{productId}")]

@@ -1,5 +1,7 @@
 namespace Inventory_OrderSyncManagementSystem.Models
 {
+    using System.Collections.Generic;
+
     public class Product
     {
         public int ProductID { get; set; }
@@ -10,5 +12,8 @@ namespace Inventory_OrderSyncManagementSystem.Models
         public DateTime CreatedDate { get; set; } = DateTime.Now;
         public DateTime ModifiedDate { get; set; } = DateTime.Now;
         public DateTime LastModified { get; set; }
+
+        public virtual ICollection<OrderDetail> OrderDetails { get; set; } = new List<OrderDetail>();
+        public virtual ICollection<InventoryTransaction> InventoryTransactions { get; set; } = new List<InventoryTransaction>();
     }
 }

@@ -36,8 +36,15 @@ namespace Inventory_OrderSyncManagementSystem.Controllers
         [HttpPost]
         public IActionResult CreateOrder([FromBody] OrderDto orderDto)
         {
-            var order = _orderService.CreateOrder(orderDto);
-            return CreatedAtAction(nameof(GetOrderById), new { id = order.OrderID }, order);
+            try
+            {
+                var order = _orderService.CreateOrder(orderDto);
+                return CreatedAtAction(nameof(GetOrderById), new { id = order.OrderID }, order);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { error = ex.Message });
+            }
         }
 
         [HttpPut("{id}")]

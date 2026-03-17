@@ -1,3 +1,0 @@
-﻿<Project>
-  <Import Project="..\buildMultiTargeting\Inventory_OrderSyncManagementSystem.props" />
-</Project>
