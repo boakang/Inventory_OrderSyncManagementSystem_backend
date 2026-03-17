@@ -25,7 +25,7 @@ Mục tiêu tài liệu này là “HR-friendly”: mô tả ngắn gọn, rõ c
 - `Data/`: `AppDbContext`
 - `Migrations/`: EF migrations
 - `Database/`: tài liệu & script SQL
-  - `ERD.md`: sơ đồ quan hệ dữ liệu. link: [ERD]("https://github.com/boakang/Inventory_OrderSyncManagementSystem_backend/blob/main/Database/ERD.md")
+  - `ERD.md`: sơ đồ quan hệ dữ liệu. link: [ERD](https://github.com/boakang/Inventory_OrderSyncManagementSystem_backend/blob/main/Database/ERD.md)
   - `DataDictionary.md`: từ điển dữ liệu
   - `sample_data.sql`: seed data qua SSMS
   - `db_constraints.sql`: chuẩn hóa dữ liệu âm + CHECK constraints không âm
