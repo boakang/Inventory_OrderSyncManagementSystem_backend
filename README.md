@@ -111,7 +111,7 @@ Synchronization (delta sync theo `LastModified`):
 - `GET /api/Synchronization/GetUpdatedData?lastModified=...`
 - `POST /api/Synchronization/UploadChanges`
 
-## Ghi chú liên quan yêu cầu HR
+## Ghi chú liên quan 
 
 - Thiết kế & quản lý DB: tài liệu `Database/ERD.md`, `Database/DataDictionary.md`, các script tạo bảng/constraint
 - Hỗ trợ Backend: EF Core (`Data/AppDbContext.cs`, migrations), Web API (Controllers/Services)
