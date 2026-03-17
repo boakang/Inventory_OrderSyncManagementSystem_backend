@@ -1,100 +1,55 @@
 # Inventory Order Sync Management System
 
-This project is a backend system for managing inventory and orders, built using:
+A comprehensive enterprise-grade solution for managing products, customers, inventory, and orders. This system is designed for small to medium-sized businesses and supports real-time synchronization between web and mobile platforms.
 
-- ASP.NET Core Web API
-- SQL Server
-- Entity Framework Core
+## Core Features
 
-## Features
-
-- **Product Management**: Add, update, delete, and view products.
-- **Customer Management**: Manage customer information.
-- **Inventory Tracking**: Track stock levels and updates.
-- **Sales Order Processing**: Handle order creation and inventory updates.
+- **Product Management**: Full CRUD operations for products and categories.
+- **Customer CRM**: Manage client data and track transaction history.
+- **Order Processing**: Multi-step order creation with real-time stock availability validation.
+- **Warehouse Management**: Track inbound and outbound inventory movements with automatic stock updates.
+- **Data Synchronization**: Built-in support for `LastModified` timestamps to sync data across web and mobile.
+- **Advanced Analytics**: Visual dashboards and reports for revenue trends, top products, and low-stock alerts.
 
 ## Project Structure
 
-The project is organized into the following main directories and files:
+The project is split into a robust Backend and a modern Frontend.
 
-### Root Directory
-- **appsettings.Development.json**: Configuration file for development environment.
-- **appsettings.json**: General configuration file.
-- **Inventory_OrderSyncManagementSystem.csproj**: Project file for the .NET application.
-- **Inventory_OrderSyncManagementSystem.sln**: Solution file for the project.
-- **Program.cs**: Entry point of the application.
-- **README.md**: Documentation file (this file).
-- **WeatherForecast.cs**: Example model for weather forecasting.
+### [Backend](file:///d:/Inventory_OrderSyncManagementSystem) (ASP.NET Core 6.0)
+- **Controllers**: RESTful API endpoints for all modules.
+- **Services**: Business logic layer including synchronization and reporting.
+- **Models**: EF Core entities and Data Transfer Objects (DTOs).
+- **Data**: `AppDbContext` for SQL Server integration.
 
-### Controllers
-Contains API controllers for handling HTTP requests:
-- `CategoriesController.cs`
-- `CustomersController.cs`
-- `InventoryController.cs`
-- `OrdersController.cs`
-- `ProductsController.cs`
-- `SynchronizationController.cs`
-- `WeatherForecastController.cs`
+### [Frontend](file:///D:/Inventory_OrderSyncManagementSystem_frontend) (React + Vite)
+- **Modern UI**: Built with Tailwind CSS and Lucide icons.
+- **Interactive Dashboards**: Data visualization using Recharts.
+- **Responsive Design**: Premium look and feel optimized for efficiency.
 
-### Data
-- **AppDbContext.cs**: Entity Framework database context for managing database operations.
+## How to Run
 
-### Database
-Contains SQL scripts for database setup and management:
-- `add_constraint.sql`
-- `add_table.sql`
-- `procedure.sql`
-- `sample_data.sql`
-- `trigger.sql`
-- `view.sql`
-- **DataDictionary.md**: Documentation for database fields.
-- **ERD.md**: Entity Relationship Diagram documentation.
+### 1. Prerequisites
+- .NET 6.0 SDK or later
+- SQL Server (LocalDB or Express)
+- Node.js 18+ and npm
 
-### Generated
-Contains auto-generated files and code.
+### 2. Backend Setup
+1. Open the solution in Visual Studio or VS Code.
+2. Update the connection string in `appsettings.json`.
+3. Apply migrations: `dotnet ef database update`.
+4. Run the project: `dotnet run`.
 
-### InventoryOrderSystem
-Organized into subdirectories for backend and database management:
-- **Backend**: Contains controllers, data, DTOs, migrations, models, repositories, and services.
-- **Database**: Contains functions, seed data, stored procedures, tables, triggers, and views.
-- **Docs**: Documentation files such as API and database design.
-
-### Models
-Contains data models and DTOs:
-- `Category.cs`, `CategoryDto.cs`
-- `Customer.cs`, `CustomerDto.cs`
-- `InventoryDto.cs`
-- `InventoryTransaction.cs`
-- `Order.cs`, `OrderDetail.cs`, `OrderDto.cs`
-- `Product.cs`, `ProductDto.cs`
-
-### Properties
-- **launchSettings.json**: Configuration for application launch settings.
-
-### Services
-Contains service classes for business logic:
-- `CategoryService.cs`, `ICategoryService.cs`
-- `CustomerService.cs`, `ICustomerService.cs`
-- `InventoryService.cs`, `IInventoryService.cs`
-- `OrderService.cs`, `IOrderService.cs`
-- `ProductService.cs`, `IProductService.cs`
-- `ReportingService.cs`
-- `SynchronizationService.cs`
-- `TransactionService.cs`
-
-### Other Directories
-- **bin/**: Contains compiled binaries.
-- **obj/**: Contains temporary object files.
-- **publish/**: Contains files for deployment.
-
-## Getting Started
-
-1. Clone the repository.
-2. Open the solution in Visual Studio.
-3. Update the `appsettings.json` file with your SQL Server connection string.
-4. Run the application.
+### 3. Frontend Setup
+1. Navigate to the `D:\Inventory_OrderSyncManagementSystem_frontend` directory.
+2. Install dependencies: `npm install`.
+3. Start the dev server: `npm run dev`.
+4. Access the app at `http://localhost:3000`.
 
 ## API Endpoints
+- `GET /api/products`: List all products
+- `POST /api/orders`: Create a new order (triggers stock deduction)
+- `GET /api/reports/revenue`: Fetch revenue analytics
+- `GET /api/suppliers`: Manage suppliers
 
 - **Products**: `/api/products`
 - **Customers**: `/api/customers`
@@ -118,3 +73,8 @@ Contains service classes for business logic:
 This project is licensed under the MIT License.
 
 ## link frontend: https://github.com/boakang/Inventory_OrderSyncManagementSystem_frontend
+
+## Notes
+- Ensure the backend is running before starting the frontend to enable full data functionality.
+- Synchronization logic uses `LastModified` flags for delta updates.
+

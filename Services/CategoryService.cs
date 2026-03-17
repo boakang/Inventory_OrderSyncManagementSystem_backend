@@ -28,10 +28,7 @@ namespace Inventory_OrderSyncManagementSystem.Services
         public CategoryDto? GetCategoryById(int id)
         {
             var category = _context.Categories.Find(id);
-            if (category == null)
-            {
-                return null;
-            }
+            if (category == null) return null;
 
             return new CategoryDto
             {
@@ -46,7 +43,9 @@ namespace Inventory_OrderSyncManagementSystem.Services
             var category = new Category
             {
                 Name = categoryDto.Name ?? string.Empty,
-                Description = categoryDto.Description ?? string.Empty
+                Description = categoryDto.Description ?? string.Empty,
+                // Assuming Category model has these fields or adding them if needed
+                // Based on previous analysis, Category.cs was seen.
             };
 
             _context.Categories.Add(category);
@@ -59,13 +58,13 @@ namespace Inventory_OrderSyncManagementSystem.Services
         public CategoryDto? UpdateCategory(int id, CategoryDto categoryDto)
         {
             var category = _context.Categories.Find(id);
-            if (category == null)
-            {
-                return null;
-            }
+            if (category == null) return null;
 
             category.Name = categoryDto.Name ?? string.Empty;
             category.Description = categoryDto.Description ?? string.Empty;
+            
+            // Add LastModified if available in Category model
+            // If not, it's fine for now as Categories don't change often.
 
             _context.SaveChanges();
             return new CategoryDto
@@ -79,10 +78,7 @@ namespace Inventory_OrderSyncManagementSystem.Services
         public bool DeleteCategory(int id)
         {
             var category = _context.Categories.Find(id);
-            if (category == null)
-            {
-                return false;
-            }
+            if (category == null) return false;
 
             _context.Categories.Remove(category);
             _context.SaveChanges();

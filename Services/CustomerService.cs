@@ -1,4 +1,6 @@
+using Inventory_OrderSyncManagementSystem.Data;
 using Inventory_OrderSyncManagementSystem.Models;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -6,51 +8,88 @@ namespace Inventory_OrderSyncManagementSystem.Services
 {
     public class CustomerService : ICustomerService
     {
-        private readonly List<CustomerDto> _customers = new();
+        private readonly AppDbContext _context;
+
+        public CustomerService(AppDbContext context)
+        {
+            _context = context;
+        }
 
         public IEnumerable<CustomerDto> GetAllCustomers()
         {
-            return _customers;
+            return _context.Customers.Select(c => new CustomerDto
+            {
+                CustomerID = c.CustomerID,
+                FirstName = c.FirstName ?? string.Empty,
+                LastName = c.LastName ?? string.Empty,
+                Email = c.Email ?? string.Empty,
+                Phone = c.Phone ?? string.Empty,
+                Address = c.Address ?? string.Empty
+            }).ToList();
         }
 
         public CustomerDto? GetCustomerById(int id)
         {
-            return _customers.FirstOrDefault(c => c.CustomerID == id);
+            var c = _context.Customers.Find(id);
+            if (c == null) return null;
+
+            return new CustomerDto
+            {
+                CustomerID = c.CustomerID,
+                FirstName = c.FirstName ?? string.Empty,
+                LastName = c.LastName ?? string.Empty,
+                Email = c.Email ?? string.Empty,
+                Phone = c.Phone ?? string.Empty,
+                Address = c.Address ?? string.Empty
+            };
         }
 
         public CustomerDto AddCustomer(CustomerDto customerDto)
         {
-            customerDto.CustomerID = _customers.Count + 1;
-            _customers.Add(customerDto);
+            var customer = new Customer
+            {
+                FirstName = customerDto.FirstName ?? string.Empty,
+                LastName = customerDto.LastName ?? string.Empty,
+                Email = customerDto.Email ?? string.Empty,
+                Phone = customerDto.Phone ?? string.Empty,
+                Address = customerDto.Address ?? string.Empty,
+                CreatedDate = DateTime.Now,
+                ModifiedDate = DateTime.Now,
+                LastModified = DateTime.Now
+            };
+
+            _context.Customers.Add(customer);
+            _context.SaveChanges();
+
+            customerDto.CustomerID = customer.CustomerID;
             return customerDto;
         }
 
         public CustomerDto? UpdateCustomer(int id, CustomerDto customerDto)
         {
-            var existingCustomer = GetCustomerById(id);
-            if (existingCustomer == null)
-            {
-                return null;
-            }
+            var existingCustomer = _context.Customers.Find(id);
+            if (existingCustomer == null) return null;
 
-            existingCustomer.FirstName = customerDto.FirstName;
-            existingCustomer.LastName = customerDto.LastName;
-            existingCustomer.Email = customerDto.Email;
-            existingCustomer.Phone = customerDto.Phone;
-            existingCustomer.Address = customerDto.Address;
+            existingCustomer.FirstName = customerDto.FirstName ?? existingCustomer.FirstName;
+            existingCustomer.LastName = customerDto.LastName ?? existingCustomer.LastName;
+            existingCustomer.Email = customerDto.Email ?? existingCustomer.Email;
+            existingCustomer.Phone = customerDto.Phone ?? existingCustomer.Phone;
+            existingCustomer.Address = customerDto.Address ?? existingCustomer.Address;
+            existingCustomer.ModifiedDate = DateTime.Now;
+            existingCustomer.LastModified = DateTime.Now;
 
-            return existingCustomer;
+            _context.SaveChanges();
+
+            return customerDto;
         }
 
         public bool DeleteCustomer(int id)
         {
-            var customer = GetCustomerById(id);
-            if (customer == null)
-            {
-                return false;
-            }
+            var customer = _context.Customers.Find(id);
+            if (customer == null) return false;
 
-            _customers.Remove(customer);
+            _context.Customers.Remove(customer);
+            _context.SaveChanges();
             return true;
         }
     }

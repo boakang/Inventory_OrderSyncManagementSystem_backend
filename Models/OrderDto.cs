@@ -9,11 +9,4 @@ namespace Inventory_OrderSyncManagementSystem.Models
         public string? Status { get; set; }
         public List<OrderDetailDto> OrderDetails { get; set; } = new();
     }
-
-    public class OrderDetailDto
-    {
-        public int ProductID { get; set; }
-        public int Quantity { get; set; }
-        public decimal UnitPrice { get; set; }
-    }
 }

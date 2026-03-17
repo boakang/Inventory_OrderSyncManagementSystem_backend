@@ -1,4 +1,6 @@
 using Microsoft.EntityFrameworkCore;
+using Inventory_OrderSyncManagementSystem.Data;
+using Inventory_OrderSyncManagementSystem.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -6,8 +8,29 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 
 // Configure DbContext with SQL Server
-builder.Services.AddDbContext<YourDbContext>(options =>
+builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+// CORS Configuration
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAll", policy =>
+    {
+        policy.AllowAnyOrigin()
+              .AllowAnyMethod()
+              .AllowAnyHeader();
+    });
+});
+
+// Register Business Services
+builder.Services.AddScoped<IProductService, ProductService>();
+builder.Services.AddScoped<ICustomerService, CustomerService>();
+builder.Services.AddScoped<IOrderService, OrderService>();
+builder.Services.AddScoped<ICategoryService, CategoryService>();
+builder.Services.AddScoped<IInventoryService, InventoryService>();
+builder.Services.AddScoped<ISupplierService, SupplierService>();
+builder.Services.AddScoped<ReportingService>();
+builder.Services.AddScoped<SynchronizationService>();
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
@@ -32,15 +55,5 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.MapGet("/", () => "Welcome to the Inventory and Order Management System API!");
+
 app.Run();
-
-// Placeholder for the DbContext class
-public class YourDbContext : DbContext
-{
-    public YourDbContext(DbContextOptions<YourDbContext> options) : base(options)
-    {
-    }
-
-    // Define DbSet properties for your entities here
-    // Example: public DbSet<Product> Products { get; set; }
-}

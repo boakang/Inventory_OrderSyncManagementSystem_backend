@@ -16,5 +16,6 @@ namespace Inventory_OrderSyncManagementSystem.Data
         public DbSet<OrderDetail> OrderDetails { get; set; }
         public DbSet<InventoryTransaction> InventoryTransactions { get; set; }
         public DbSet<Category> Categories { get; set; }
+        public DbSet<Supplier> Suppliers { get; set; }
     }
 }

@@ -74,3 +74,8 @@ D:\Inventory_OrderSyncManagementSystem\bin\Debug\net7.0\publish\appsettings.Deve
 D:\Inventory_OrderSyncManagementSystem\bin\Debug\net7.0\publish\appsettings.json
 D:\Inventory_OrderSyncManagementSystem\bin\Debug\net7.0\publish\Inventory_OrderSyncManagementSystem.deps.json
 D:\Inventory_OrderSyncManagementSystem\bin\Debug\net7.0\publish\Inventory_OrderSyncManagementSystem.runtimeconfig.json
+D:\Inventory_OrderSyncManagementSystem\bin\Debug\net7.0\Humanizer.dll
+D:\Inventory_OrderSyncManagementSystem\bin\Debug\net7.0\Microsoft.EntityFrameworkCore.Design.dll
+D:\Inventory_OrderSyncManagementSystem\bin\Debug\net7.0\Microsoft.Extensions.DependencyModel.dll
+D:\Inventory_OrderSyncManagementSystem\bin\Debug\net7.0\Mono.TextTemplating.dll
+D:\Inventory_OrderSyncManagementSystem\bin\Debug\net7.0\System.CodeDom.dll

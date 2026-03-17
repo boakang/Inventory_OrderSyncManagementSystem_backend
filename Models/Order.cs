@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+
 namespace Inventory_OrderSyncManagementSystem.Models
 {
     public class Order
@@ -8,5 +10,7 @@ namespace Inventory_OrderSyncManagementSystem.Models
         public decimal TotalAmount { get; set; }
         public string Status { get; set; } = string.Empty;
         public DateTime LastModified { get; set; }
+
+        public virtual ICollection<OrderDetail> OrderDetails { get; set; } = new List<OrderDetail>();
     }
 }
