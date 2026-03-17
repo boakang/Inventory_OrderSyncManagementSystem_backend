@@ -2,7 +2,7 @@
 
 ASP.NET Core Web API quản lý Products/Customers/Orders/Inventory/Suppliers. Backend dùng Entity Framework Core với SQL Server, có các endpoint đồng bộ (delta sync) dựa trên `LastModified`, và có bộ tài liệu Database (ERD + Data Dictionary) kèm các script SQL (tables/views/procedures/triggers/sample data).
 
-Mục tiêu tài liệu này là “HR-friendly”: mô tả ngắn gọn, rõ cấu trúc, công nghệ, kết nối DB, và các artefact liên quan thiết kế/tối ưu/kiểm thử DB.
+Mục tiêu tài liệu: mô tả ngắn gọn, rõ cấu trúc, công nghệ, kết nối DB, và các artefact liên quan thiết kế/tối ưu/kiểm thử DB.
 
 ## Công nghệ sử dụng
 
