@@ -26,7 +26,7 @@ Mục tiêu tài liệu: mô tả ngắn gọn, rõ cấu trúc, công nghệ, k
 - `Migrations/`: EF migrations
 - `Database/`: tài liệu & script SQL
   - `ERD.md`: sơ đồ quan hệ dữ liệu. link: [ERD](https://github.com/boakang/Inventory_OrderSyncManagementSystem_backend/blob/main/Database/ERD.md)
-  - `DataDictionary.md`: từ điển dữ liệu
+  - `DataDictionary.md`: từ điển dữ liệu. link: [Data Dictionary](https://github.com/boakang/Inventory_OrderSyncManagementSystem_backend/blob/main/Database/DataDictionary.md)
   - `sample_data.sql`: seed data qua SSMS
   - `db_constraints.sql`: chuẩn hóa dữ liệu âm + CHECK constraints không âm
   - `db_functions.sql`: views/functions/stored procedures (tham khảo/chạy tay)
