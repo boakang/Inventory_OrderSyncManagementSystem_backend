@@ -18,14 +18,14 @@ namespace Inventory_OrderSyncManagementSystem.Controllers
         [HttpGet]
         public IActionResult GetAllInventory()
         {
-            var inventory = _inventoryService.GetAllInventory();
+            var inventory = _inventoryService.GetAllInventoryView();
             return Ok(inventory);
         }
 
         [HttpGet("{productId}")]
         public IActionResult GetInventoryByProductId(int productId)
         {
-            var inventoryItem = _inventoryService.GetInventoryByProductId(productId);
+            var inventoryItem = _inventoryService.GetInventoryViewByProductId(productId);
             if (inventoryItem == null)
             {
                 return NotFound();

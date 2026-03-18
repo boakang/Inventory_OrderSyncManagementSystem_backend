@@ -1,6 +1,6 @@
 # Data Dictionary
 
-Tài liệu này mô tả chi tiết bảng/cột theo EF Core migration `InitialCreate` (20260317044512).
+Tài liệu này mô tả chi tiết bảng/cột theo các EF Core migrations trong project.
 
 Ghi chú:
 
@@ -8,6 +8,16 @@ Ghi chú:
 - Cột thời gian dùng `datetime2`.
 - `OrderDetails.TotalPrice` hiện là cột lưu (không phải computed column).
 - Các ràng buộc không âm có thể bật bằng script `db_constraints.sql`.
+- `__EFMigrationsHistory` là bảng hệ thống do EF Core tự tạo để theo dõi migrations đã apply. Đây không phải bảng nghiệp vụ.
+
+## Bảng hệ thống (EF Core)
+
+### `__EFMigrationsHistory`
+
+| Column | Type | Null | Key | Description |
+|---|---|---:|---|---|
+| MigrationId | nvarchar(150) | NO | PK | Tên migration đã apply |
+| ProductVersion | nvarchar(32) | NO |  | Version EF Core đã tạo migration |
 
 ## 1) Categories
 
@@ -47,6 +57,8 @@ Ghi chú:
 | Column | Type | Null | Key | Description |
 |---|---|---:|---|---|
 | ProductID | int (IDENTITY) | NO | PK | Khoá chính sản phẩm |
+| CategoryID | int | YES | FK | FK tới Categories.CategoryID (Restrict) |
+| SupplierID | int | YES | FK | FK tới Suppliers.SupplierID (Restrict) |
 | Name | nvarchar(max) | NO |  | Tên sản phẩm |
 | Description | nvarchar(max) | NO |  | Mô tả |
 | Price | decimal(18,2) | NO |  | Giá bán (khuyến nghị `>= 0`) |
@@ -94,3 +106,5 @@ Ghi chú:
 	- `OrderDetails.OrderID` → `Orders.OrderID`
 	- `OrderDetails.ProductID` → `Products.ProductID`
 	- `InventoryTransactions.ProductID` → `Products.ProductID`
+	- `Products.CategoryID` → `Categories.CategoryID`
+	- `Products.SupplierID` → `Suppliers.SupplierID`

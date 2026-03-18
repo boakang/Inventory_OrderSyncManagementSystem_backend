@@ -69,6 +69,18 @@ namespace Inventory_OrderSyncManagementSystem.Data
                 .WithMany(p => p.InventoryTransactions)
                 .HasForeignKey(it => it.ProductID)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Product>()
+                .HasOne(p => p.Category)
+                .WithMany(c => c.Products)
+                .HasForeignKey(p => p.CategoryID)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Product>()
+                .HasOne(p => p.Supplier)
+                .WithMany(s => s.Products)
+                .HasForeignKey(p => p.SupplierID)
+                .OnDelete(DeleteBehavior.Restrict);
         }
     }
 }

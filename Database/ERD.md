@@ -1,6 +1,6 @@
 # Entity Relationship Diagram (ERD)
 
-Tài liệu này mô tả schema hiện tại theo EF Core migration `InitialCreate` (20260317044512).
+Tài liệu này mô tả schema hiện tại theo các EF Core migrations trong project.
 
 ## Bảng (tables)
 
@@ -11,6 +11,10 @@ Tài liệu này mô tả schema hiện tại theo EF Core migration `InitialCre
 - `Orders`
 - `OrderDetails`
 - `InventoryTransactions`
+
+Ghi chú:
+
+- `__EFMigrationsHistory` là bảng hệ thống do EF Core tự tạo để theo dõi migrations đã apply. Đây không phải bảng nghiệp vụ nên không liệt kê trong ERD.
 
 ## ERD (Mermaid)
 
@@ -45,6 +49,8 @@ erDiagram
 
     PRODUCTS {
         int ProductID PK
+        int CategoryID "nullable, FK"
+        int SupplierID "nullable, FK"
         string Name
         string Description
         decimal Price
@@ -85,9 +91,16 @@ erDiagram
     CUSTOMERS ||--o{ ORDERS : places
     PRODUCTS ||--o{ ORDERDETAILS : item
     PRODUCTS ||--o{ INVENTORYTRANSACTIONS : logs
+
+    CATEGORIES ||--o{ PRODUCTS : categorizes
+    SUPPLIERS ||--o{ PRODUCTS : supplies
 ```
 
 ## Ghi chú quan trọng
+
+### Bảng hệ thống
+
+- `__EFMigrationsHistory`: lưu `MigrationId` và `ProductVersion` (EF Core) để biết DB đang ở phiên bản schema nào. Không nên xoá/sửa thủ công trừ khi bạn hiểu rõ quy trình migrations.
 
 FK được tạo trong DB (đã enforce bằng migration bổ sung):
 
@@ -95,6 +108,8 @@ FK được tạo trong DB (đã enforce bằng migration bổ sung):
 - `OrderDetails.OrderID` → `Orders.OrderID` (Cascade)
 - `OrderDetails.ProductID` → `Products.ProductID` (Restrict)
 - `InventoryTransactions.ProductID` → `Products.ProductID` (Restrict)
+- `Products.CategoryID` → `Categories.CategoryID` (Restrict, nullable)
+- `Products.SupplierID` → `Suppliers.SupplierID` (Restrict, nullable)
 
 Ràng buộc unique:
 

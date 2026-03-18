@@ -22,7 +22,9 @@ namespace Inventory_OrderSyncManagementSystem.Services
                 Name = p.Name,
                 Description = p.Description,
                 Price = p.Price,
-                StockQuantity = p.StockQuantity
+                StockQuantity = p.StockQuantity,
+                CategoryID = p.CategoryID,
+                SupplierID = p.SupplierID
             }).ToList();
         }
 
@@ -37,7 +39,9 @@ namespace Inventory_OrderSyncManagementSystem.Services
                 Name = p.Name,
                 Description = p.Description,
                 Price = p.Price,
-                StockQuantity = p.StockQuantity
+                StockQuantity = p.StockQuantity,
+                CategoryID = p.CategoryID,
+                SupplierID = p.SupplierID
             };
         }
 
@@ -52,12 +56,32 @@ namespace Inventory_OrderSyncManagementSystem.Services
                 throw new ArgumentException("StockQuantity must be >= 0.");
             }
 
+            if (productDto.CategoryID != null)
+            {
+                var categoryExists = _context.Categories.Any(c => c.CategoryID == productDto.CategoryID);
+                if (!categoryExists)
+                {
+                    throw new ArgumentException($"CategoryID {productDto.CategoryID} does not exist.");
+                }
+            }
+
+            if (productDto.SupplierID != null)
+            {
+                var supplierExists = _context.Suppliers.Any(s => s.SupplierID == productDto.SupplierID);
+                if (!supplierExists)
+                {
+                    throw new ArgumentException($"SupplierID {productDto.SupplierID} does not exist.");
+                }
+            }
+
             var product = new Product
             {
                 Name = productDto.Name ?? string.Empty,
                 Description = productDto.Description ?? string.Empty,
                 Price = productDto.Price,
                 StockQuantity = productDto.StockQuantity,
+                CategoryID = productDto.CategoryID,
+                SupplierID = productDto.SupplierID,
                 CreatedDate = DateTime.Now,
                 ModifiedDate = DateTime.Now,
                 LastModified = DateTime.Now
@@ -65,6 +89,20 @@ namespace Inventory_OrderSyncManagementSystem.Services
 
             _context.Products.Add(product);
             _context.SaveChanges();
+
+            // Log initial stock as an inventory transaction for audit/reporting.
+            // Do not modify StockQuantity here (it's already set on the Product).
+            if (product.StockQuantity > 0)
+            {
+                _context.InventoryTransactions.Add(new InventoryTransaction
+                {
+                    ProductID = product.ProductID,
+                    Quantity = product.StockQuantity,
+                    TransactionDate = DateTime.Now,
+                    TransactionType = "Initial Stock"
+                });
+                _context.SaveChanges();
+            }
 
             productDto.ProductID = product.ProductID;
             return productDto;
@@ -87,10 +125,30 @@ namespace Inventory_OrderSyncManagementSystem.Services
                 throw new ArgumentException("StockQuantity must be >= 0.");
             }
 
+            if (productDto.CategoryID != null)
+            {
+                var categoryExists = _context.Categories.Any(c => c.CategoryID == productDto.CategoryID);
+                if (!categoryExists)
+                {
+                    throw new ArgumentException($"CategoryID {productDto.CategoryID} does not exist.");
+                }
+            }
+
+            if (productDto.SupplierID != null)
+            {
+                var supplierExists = _context.Suppliers.Any(s => s.SupplierID == productDto.SupplierID);
+                if (!supplierExists)
+                {
+                    throw new ArgumentException($"SupplierID {productDto.SupplierID} does not exist.");
+                }
+            }
+
             existingProduct.Name = productDto.Name ?? existingProduct.Name;
             existingProduct.Description = productDto.Description ?? existingProduct.Description;
             existingProduct.Price = productDto.Price;
             existingProduct.StockQuantity = productDto.StockQuantity;
+            existingProduct.CategoryID = productDto.CategoryID;
+            existingProduct.SupplierID = productDto.SupplierID;
             existingProduct.ModifiedDate = DateTime.Now;
             existingProduct.LastModified = DateTime.Now;
 

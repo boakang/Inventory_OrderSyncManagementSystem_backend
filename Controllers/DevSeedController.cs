@@ -31,122 +31,26 @@ namespace Inventory_OrderSyncManagementSystem.Controllers
 
             await using var tx = await _context.Database.BeginTransactionAsync(cancellationToken);
 
-            // Categories (not currently linked to Product, but available via Categories API)
-            await EnsureCategoryAsync("Electronics", "Devices and accessories", cancellationToken);
-            await EnsureCategoryAsync("Office", "Office supplies", cancellationToken);
+            // Categories (requested)
+            await EnsureCategoryAsync("Đồ gia dụng & Nhà bếp", string.Empty, cancellationToken);
+            await EnsureCategoryAsync("Vật dụng vệ sinh & Chăm sóc nhà cửa", string.Empty, cancellationToken);
+            await EnsureCategoryAsync("Hàng tiêu dùng nhanh (FMCG)", string.Empty, cancellationToken);
+            var defaultCategory = await EnsureCategoryAsync("Thiết bị điện gia dụng nhỏ", string.Empty, cancellationToken);
+            await EnsureCategoryAsync("Đồ dùng gia đình khác", string.Empty, cancellationToken);
 
             // Suppliers
-            var supplier = await EnsureSupplierAsync(
-                name: "Default Supplier",
-                contactInfo: "contact@supplier.local",
+            var defaultSupplier = await EnsureSupplierAsync(
+                name: "Central Retail",
+                contactInfo: string.Empty,
                 now,
                 cancellationToken);
 
-            // Customers
-            var customer1 = await EnsureCustomerAsync(
-                email: "an@gmail.com",
-                firstName: "Nguyen",
-                lastName: "An",
-                phone: "0901234567",
-                address: "TP.HCM",
-                now,
-                cancellationToken);
-
-            await EnsureCustomerAsync(
-                email: "binh@gmail.com",
-                firstName: "Tran",
-                lastName: "Binh",
-                phone: "0912345678",
-                address: "Ha Noi",
-                now,
-                cancellationToken);
-
-            // Products + seed stock via InventoryTransactions
-            var macbook = await EnsureProductWithSeedStockAsync(
-                name: "MacBook Pro 14",
-                description: "M3 Pro, 16GB RAM, 512GB",
-                price: 1999m,
-                stockQuantity: 15,
-                now,
-                cancellationToken);
-
-            var iphone = await EnsureProductWithSeedStockAsync(
-                name: "iPhone 15 Pro",
-                description: "Natural Titanium, 128GB",
-                price: 999m,
-                stockQuantity: 42,
-                now,
-                cancellationToken);
-
-            var ipad = await EnsureProductWithSeedStockAsync(
-                name: "iPad Air",
-                description: "M1 Chip, 64GB, Space Gray",
-                price: 599m,
-                stockQuantity: 0,
-                now,
-                cancellationToken);
-
-            await EnsureProductWithSeedStockAsync(
-                name: "AirPods Pro 2",
-                description: "USB-C Charging Case",
-                price: 249m,
-                stockQuantity: 85,
-                now,
-                cancellationToken);
-
-            // Optional: create 1 sample order if none exists
-            var hasAnyOrder = await _context.Orders.AnyAsync(cancellationToken);
-            if (!hasAnyOrder)
-            {
-                var orderDetails = new List<OrderDetail>
-                {
-                    new()
-                    {
-                        ProductID = macbook.ProductID,
-                        Quantity = 1,
-                        UnitPrice = macbook.Price,
-                        TotalPrice = macbook.Price
-                    },
-                    new()
-                    {
-                        ProductID = iphone.ProductID,
-                        Quantity = 1,
-                        UnitPrice = iphone.Price,
-                        TotalPrice = iphone.Price
-                    }
-                };
-
-                var total = orderDetails.Sum(d => d.TotalPrice);
-
-                var order = new Order
-                {
-                    CustomerID = customer1.CustomerID,
-                    OrderDate = now,
-                    Status = "Pending",
-                    TotalAmount = total,
-                    LastModified = now,
-                    OrderDetails = orderDetails
-                };
-
-                // Apply stock movements (mirror OrderService behavior)
-                foreach (var detail in orderDetails)
-                {
-                    var product = await _context.Products.FirstAsync(p => p.ProductID == detail.ProductID, cancellationToken);
-                    product.StockQuantity -= detail.Quantity;
-                    product.ModifiedDate = now;
-                    product.LastModified = now;
-
-                    _context.InventoryTransactions.Add(new InventoryTransaction
-                    {
-                        ProductID = detail.ProductID,
-                        Quantity = detail.Quantity,
-                        TransactionDate = now,
-                        TransactionType = "Sales Order (Seed)"
-                    });
-                }
-
-                _context.Orders.Add(order);
-            }
+            await EnsureSupplierAsync("Saigon Co.op", string.Empty, now, cancellationToken);
+            await EnsureSupplierAsync("WinCommerce", string.Empty, now, cancellationToken);
+            await EnsureSupplierAsync("AEON", string.Empty, now, cancellationToken);
+            await EnsureSupplierAsync("Lock&Lock", string.Empty, now, cancellationToken);
+            await EnsureSupplierAsync("Sunhouse", string.Empty, now, cancellationToken);
+            await EnsureSupplierAsync("SDHome", string.Empty, now, cancellationToken);
 
             await _context.SaveChangesAsync(cancellationToken);
             await tx.CommitAsync(cancellationToken);
@@ -154,22 +58,21 @@ namespace Inventory_OrderSyncManagementSystem.Controllers
             var summary = new
             {
                 categories = await _context.Categories.CountAsync(cancellationToken),
-                suppliers = await _context.Suppliers.CountAsync(cancellationToken),
-                customers = await _context.Customers.CountAsync(cancellationToken),
-                products = await _context.Products.CountAsync(cancellationToken),
-                orders = await _context.Orders.CountAsync(cancellationToken),
-                inventoryTransactions = await _context.InventoryTransactions.CountAsync(cancellationToken)
+                suppliers = await _context.Suppliers.CountAsync(cancellationToken)
             };
 
             return Ok(new { seeded = true, summary });
         }
 
-        private async Task EnsureCategoryAsync(string name, string description, CancellationToken cancellationToken)
+        private async Task<Category> EnsureCategoryAsync(string name, string description, CancellationToken cancellationToken)
         {
-            var exists = await _context.Categories.AnyAsync(c => c.Name == name, cancellationToken);
-            if (exists) return;
+            var existing = await _context.Categories.FirstOrDefaultAsync(c => c.Name == name, cancellationToken);
+            if (existing != null) return existing;
 
-            _context.Categories.Add(new Category { Name = name, Description = description });
+            var category = new Category { Name = name, Description = description };
+            _context.Categories.Add(category);
+            await _context.SaveChangesAsync(cancellationToken);
+            return category;
         }
 
         private async Task<Supplier> EnsureSupplierAsync(string name, string contactInfo, DateTime now, CancellationToken cancellationToken)
@@ -225,12 +128,24 @@ namespace Inventory_OrderSyncManagementSystem.Controllers
             string description,
             decimal price,
             int stockQuantity,
+            int? categoryId,
+            int? supplierId,
             DateTime now,
             CancellationToken cancellationToken)
         {
             var existing = await _context.Products.FirstOrDefaultAsync(p => p.Name == name, cancellationToken);
             if (existing != null)
             {
+                if (categoryId != null && existing.CategoryID != categoryId)
+                {
+                    existing.CategoryID = categoryId;
+                }
+
+                if (supplierId != null && existing.SupplierID != supplierId)
+                {
+                    existing.SupplierID = supplierId;
+                }
+
                 // Ensure at least one seed transaction exists for this product.
                 var hasSeedTx = await _context.InventoryTransactions.AnyAsync(
                     it => it.ProductID == existing.ProductID && it.TransactionType == "Seed Stock",
@@ -256,6 +171,8 @@ namespace Inventory_OrderSyncManagementSystem.Controllers
                 Description = description,
                 Price = price,
                 StockQuantity = stockQuantity,
+                CategoryID = categoryId,
+                SupplierID = supplierId,
                 CreatedDate = now,
                 ModifiedDate = now,
                 LastModified = now

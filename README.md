@@ -1,8 +1,13 @@
-# Inventory Order Sync Management System (Backend)
+# Inventory Order Sync Management System
 
-ASP.NET Core Web API quản lý Products/Customers/Orders/Inventory/Suppliers. Backend dùng Entity Framework Core với SQL Server, có các endpoint đồng bộ (delta sync) dựa trên `LastModified`, và có bộ tài liệu Database (ERD + Data Dictionary) kèm các script SQL (tables/views/procedures/triggers/sample data).
+Hệ thống quản lý Products/Customers/Orders/Inventory/Suppliers.
 
 Mục tiêu tài liệu: mô tả ngắn gọn, rõ cấu trúc, công nghệ, kết nối DB, và các artefact liên quan thiết kế/tối ưu/kiểm thử DB.
+
+- Backend: ASP.NET Core Web API (.NET 7) + EF Core 7 + SQL Server
+- Frontend (tuỳ chọn): Vite + React (proxy `/api` → backend)
+
+Repo/workspace này tập trung vào backend, nhưng có thể chạy cùng frontend để demo luồng UI.
 
 ## Công nghệ sử dụng
 
@@ -14,8 +19,12 @@ Mục tiêu tài liệu: mô tả ngắn gọn, rõ cấu trúc, công nghệ, k
 ## Database & Kết nối
 
 - Database: SQL Server (LocalDB/Express/Developer/Full)
-- Kết nối: `appsettings.json` → `ConnectionStrings:DefaultConnection`
-- Schema được tạo bởi EF Core Migrations trong thư mục `Migrations/`
+- Connection string: `appsettings.json` → `ConnectionStrings:DefaultConnection`
+- Schema được tạo bởi EF Core Migrations trong `Migrations/`
+
+Health-check để xác nhận backend đang connect vào DB nào:
+
+- `GET /api/health/db` trả `dataSource` và `database`
 
 ## Cấu trúc thư mục (backend)
 
@@ -30,6 +39,16 @@ Mục tiêu tài liệu: mô tả ngắn gọn, rõ cấu trúc, công nghệ, k
   - `sample_data.sql`: seed data qua SSMS
   - `db_constraints.sql`: chuẩn hóa dữ liệu âm + CHECK constraints không âm
   - `db_functions.sql`: views/functions/stored procedures (tham khảo/chạy tay)
+
+## Cấu trúc (frontend - tuỳ chọn)
+
+Nếu bạn có workspace/frontend ở máy local (ví dụ: `D:\Inventory_OrderSyncManagementSystem_frontend`) thì đây là Vite + React.
+
+- Proxy dev: `/api/*` → `http://127.0.0.1:5080`
+- Một số UX đã được implement:
+  - Orders list sort mới → cũ
+  - Create Order: chọn Customer theo tên (dropdown)
+  - Order Details page: `/orders/:id` và hỗ trợ tải PDF
 
 ## Chạy dự án
 
@@ -55,6 +74,23 @@ dotnet run
 - HTTP: `http://localhost:5080`
 - Swagger (Development): `http://localhost:5080/swagger`
 
+## Chạy kèm frontend (tuỳ chọn)
+
+Chạy backend trước:
+
+```bash
+dotnet run
+```
+
+Chạy frontend (ở thư mục frontend):
+
+```bash
+npm install
+npm run dev
+```
+
+Frontend gọi API qua `/api/*`.
+
 ## Seed dữ liệu mẫu
 
 ### Cách A (Dev): endpoint seed
@@ -64,6 +100,8 @@ Chỉ hoạt động khi environment là Development.
 ```bash
 curl -X POST http://localhost:5080/api/dev/seed
 ```
+
+Lưu ý: seed hiện tập trung vào reference data (Categories/Suppliers) để tránh “data giả” nghiệp vụ.
 
 ### Cách B: chạy script trên SSMS
 
@@ -87,6 +125,10 @@ Backend đã enforce các rule sau:
 
 Lưu ý: lịch sử tồn kho (`InventoryTransactions`) hiện lưu `Quantity` không âm; hướng tăng/giảm được suy ra từ `TransactionType`.
 
+## Inventory (source of truth)
+
+Tồn kho “hiện tại” được lấy từ `Products.StockQuantity` (source of truth). API inventory trả thêm view-friendly fields (product/category/supplier) để frontend không phải join nhiều request.
+
 ## API Endpoints
 
 Base path: `/api/*`
@@ -99,6 +141,16 @@ CRUD:
 - `GET/POST/PUT/DELETE /api/inventory`
 - `GET/POST/PUT/DELETE /api/categories`
 - `GET/POST/PUT/DELETE /api/suppliers`
+
+Dev utilities (chỉ chạy khi `ASPNETCORE_ENVIRONMENT=Development`):
+
+- `POST /api/dev/reset?reseedIdentities=true&preserveReferenceData=true`
+  - Reset data nghiệp vụ, giữ schema
+  - Mặc định giữ Categories/Suppliers
+- `POST /api/dev/seed`
+  - Seed reference data
+- `POST /api/dev/maintenance/recalc-orderdetail-totalprice?dryRun=true|false`
+  - One-time fix: backfill `OrderDetails.TotalPrice` cho dữ liệu cũ
 
 Reports:
 
@@ -116,6 +168,12 @@ Synchronization (delta sync theo `LastModified`):
 - Thiết kế & quản lý DB: tài liệu `Database/ERD.md`, `Database/DataDictionary.md`, các script tạo bảng/constraint
 - Hỗ trợ Backend: EF Core (`Data/AppDbContext.cs`, migrations), Web API (Controllers/Services)
 - Kiểm thử & bảo trì: `GET /api/health/db` để kiểm tra canConnect/canQuery; script CHECK constraints để đảm bảo toàn vẹn
+
+## Notes về OrderDetails.TotalPrice
+
+- Dữ liệu cũ có thể có `OrderDetails.TotalPrice = 0` (do trước đây chưa set field khi tạo order).
+- Backend đã set `TotalPrice = Quantity * UnitPrice` cho order mới.
+- Có endpoint dev maintenance để backfill dữ liệu cũ.
 
 ## Dev settings
 

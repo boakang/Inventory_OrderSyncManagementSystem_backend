@@ -25,43 +25,63 @@ namespace Inventory_OrderSyncManagementSystem.Services
             _context = context;
         }
 
+        public IEnumerable<InventoryViewDto> GetAllInventoryView()
+        {
+            // Projection join via navigation properties (left joins) to provide
+            // a UI-friendly inventory view in a single call.
+            return _context.Products
+                .Select(p => new InventoryViewDto
+                {
+                    ProductID = p.ProductID,
+                    Quantity = p.StockQuantity,
+                    ProductName = p.Name,
+                    CategoryID = p.CategoryID,
+                    SupplierID = p.SupplierID,
+                    CategoryName = p.Category != null ? p.Category.Name : null,
+                    SupplierName = p.Supplier != null ? p.Supplier.Name : null,
+                })
+                .ToList();
+        }
+
+        public InventoryViewDto? GetInventoryViewByProductId(int productId)
+        {
+            return _context.Products
+                .Where(p => p.ProductID == productId)
+                .Select(p => new InventoryViewDto
+                {
+                    ProductID = p.ProductID,
+                    Quantity = p.StockQuantity,
+                    ProductName = p.Name,
+                    CategoryID = p.CategoryID,
+                    SupplierID = p.SupplierID,
+                    CategoryName = p.Category != null ? p.Category.Name : null,
+                    SupplierName = p.Supplier != null ? p.Supplier.Name : null,
+                })
+                .FirstOrDefault();
+        }
+
         public IEnumerable<InventoryDto> GetAllInventory()
         {
-            return _context.InventoryTransactions
-                .Select(it => new
+            // Inventory levels should reflect the current on-hand stock.
+            // StockQuantity on Product is the source of truth and includes products with no transactions yet.
+            return _context.Products
+                .Select(p => new InventoryDto
                 {
-                    it.ProductID,
-                    AbsQuantity = it.Quantity < 0 ? -it.Quantity : it.Quantity,
-                    SignedQuantity = (it.TransactionType == "Stock Out"
-                        || it.TransactionType == "Issue"
-                        || it.TransactionType.StartsWith("Sales Order"))
-                        ? -(it.Quantity < 0 ? -it.Quantity : it.Quantity)
-                        : (it.Quantity < 0 ? -it.Quantity : it.Quantity)
-                })
-                .GroupBy(x => x.ProductID)
-                .Select(g => new InventoryDto
-                {
-                    ProductID = g.Key,
-                    Quantity = g.Sum(x => x.SignedQuantity)
+                    ProductID = p.ProductID,
+                    Quantity = p.StockQuantity
                 })
                 .ToList();
         }
 
         public InventoryDto? GetInventoryByProductId(int productId)
         {
-            var totalQuantity = _context.InventoryTransactions
-                .Where(it => it.ProductID == productId)
-                .Select(it => (it.TransactionType == "Stock Out"
-                    || it.TransactionType == "Issue"
-                    || it.TransactionType.StartsWith("Sales Order"))
-                    ? -(it.Quantity < 0 ? -it.Quantity : it.Quantity)
-                    : (it.Quantity < 0 ? -it.Quantity : it.Quantity))
-                .Sum();
+            var product = _context.Products.Find(productId);
+            if (product == null) return null;
 
             return new InventoryDto
             {
                 ProductID = productId,
-                Quantity = totalQuantity
+                Quantity = product.StockQuantity
             };
         }
 
@@ -117,9 +137,14 @@ namespace Inventory_OrderSyncManagementSystem.Services
 
         public bool DeleteInventory(int productId)
         {
-            // We don't usually delete inventory history, but for this mock-like service:
+            // Clear inventory history and reset on-hand stock for the product.
+            var product = _context.Products.Find(productId);
+            if (product == null) return false;
+
             var transactions = _context.InventoryTransactions.Where(it => it.ProductID == productId);
             _context.InventoryTransactions.RemoveRange(transactions);
+            product.StockQuantity = 0;
+            product.LastModified = DateTime.Now;
             _context.SaveChanges();
             return true;
         }

@@ -14,5 +14,8 @@ namespace Inventory_OrderSyncManagementSystem.Models
         [Range(0, int.MaxValue)]
         public int StockQuantity { get; set; }
         public int Quantity { get; set; }
+
+        public int? CategoryID { get; set; }
+        public int? SupplierID { get; set; }
     }
 }

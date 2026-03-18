@@ -1,5 +1,7 @@
 using System;
 
+using System.Collections.Generic;
+
 namespace Inventory_OrderSyncManagementSystem.Models
 {
     public class Supplier
@@ -10,5 +12,7 @@ namespace Inventory_OrderSyncManagementSystem.Models
         public DateTime CreatedDate { get; set; } = DateTime.Now;
         public DateTime ModifiedDate { get; set; } = DateTime.Now;
         public DateTime LastModified { get; set; } = DateTime.Now;
+
+        public virtual ICollection<Product> Products { get; set; } = new List<Product>();
     }
 }

@@ -13,6 +13,12 @@ namespace Inventory_OrderSyncManagementSystem.Models
         public DateTime ModifiedDate { get; set; } = DateTime.Now;
         public DateTime LastModified { get; set; }
 
+        public int? CategoryID { get; set; }
+        public virtual Category? Category { get; set; }
+
+        public int? SupplierID { get; set; }
+        public virtual Supplier? Supplier { get; set; }
+
         public virtual ICollection<OrderDetail> OrderDetails { get; set; } = new List<OrderDetail>();
         public virtual ICollection<InventoryTransaction> InventoryTransactions { get; set; } = new List<InventoryTransaction>();
     }

@@ -40,21 +40,12 @@ namespace Inventory_OrderSyncManagementSystem.Services
 
         public IEnumerable<InventoryDto> GetCurrentInventoryLevels()
         {
-            return _context.InventoryTransactions
-                .Select(it => new
+            // Align reports with current on-hand stock.
+            return _context.Products
+                .Select(p => new InventoryDto
                 {
-                    it.ProductID,
-                    SignedQuantity = (it.TransactionType == "Stock Out"
-                        || it.TransactionType == "Issue"
-                        || it.TransactionType.StartsWith("Sales Order"))
-                        ? -(it.Quantity < 0 ? -it.Quantity : it.Quantity)
-                        : (it.Quantity < 0 ? -it.Quantity : it.Quantity)
-                })
-                .GroupBy(x => x.ProductID)
-                .Select(g => new InventoryDto
-                {
-                    ProductID = g.Key,
-                    Quantity = g.Sum(x => x.SignedQuantity)
+                    ProductID = p.ProductID,
+                    Quantity = p.StockQuantity
                 })
                 .ToList();
         }

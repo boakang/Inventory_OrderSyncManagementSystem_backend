@@ -20,6 +20,9 @@ namespace Inventory_OrderSyncManagementSystem.Services
         {
             return _context.Orders
                 .Include(o => o.OrderDetails)
+                .ThenInclude(od => od.Product)
+                .OrderByDescending(o => o.OrderDate)
+                .ThenByDescending(o => o.OrderID)
                 .Select(o => new OrderDto
                 {
                     OrderID = o.OrderID,
@@ -31,8 +34,10 @@ namespace Inventory_OrderSyncManagementSystem.Services
                     {
                         OrderDetailID = od.OrderDetailID,
                         ProductID = od.ProductID,
+                        ProductName = od.Product != null ? od.Product.Name : null,
                         Quantity = od.Quantity,
-                        UnitPrice = od.UnitPrice
+                        UnitPrice = od.UnitPrice,
+                        TotalPrice = od.TotalPrice != 0 ? od.TotalPrice : (od.Quantity * od.UnitPrice)
                     }).ToList()
                 }).ToList();
         }
@@ -41,6 +46,7 @@ namespace Inventory_OrderSyncManagementSystem.Services
         {
             var o = _context.Orders
                 .Include(o => o.OrderDetails)
+                .ThenInclude(od => od.Product)
                 .FirstOrDefault(o => o.OrderID == id);
 
             if (o == null) return null;
@@ -56,8 +62,10 @@ namespace Inventory_OrderSyncManagementSystem.Services
                 {
                     OrderDetailID = od.OrderDetailID,
                     ProductID = od.ProductID,
+                    ProductName = od.Product != null ? od.Product.Name : null,
                     Quantity = od.Quantity,
-                    UnitPrice = od.UnitPrice
+                    UnitPrice = od.UnitPrice,
+                    TotalPrice = od.TotalPrice != 0 ? od.TotalPrice : (od.Quantity * od.UnitPrice)
                 }).ToList()
             };
         }
@@ -67,18 +75,21 @@ namespace Inventory_OrderSyncManagementSystem.Services
             using var transaction = _context.Database.BeginTransaction();
             try
             {
+                var computedTotalAmount = orderDto.OrderDetails.Sum(od => (decimal)od.Quantity * od.UnitPrice);
+
                 var order = new Order
                 {
                     CustomerID = orderDto.CustomerID,
                     OrderDate = DateTime.Now,
                     Status = "Pending",
-                    TotalAmount = orderDto.TotalAmount,
+                    TotalAmount = computedTotalAmount,
                     LastModified = DateTime.Now,
                     OrderDetails = orderDto.OrderDetails.Select(od => new OrderDetail
                     {
                         ProductID = od.ProductID,
                         Quantity = od.Quantity,
-                        UnitPrice = od.UnitPrice
+                        UnitPrice = od.UnitPrice,
+                        TotalPrice = (decimal)od.Quantity * od.UnitPrice
                     }).ToList()
                 };
 
