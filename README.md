@@ -136,7 +136,8 @@ Tồn kho “hiện tại” được lấy từ `Products.StockQuantity` (sourc
 ```mermaid
 flowchart LR
   U[User/Browser] -->|UI actions| FE[Frontend: Vite + React :3000]
-  FE -->|HTTP JSON: /api (prefix)| VP[Vite Proxy]
+  FE -->|HTTP JSON| VP[Vite Proxy]
+  FE -.-> N[API base path: /api]
   VP -->|Forward| BE[Backend: ASP NET Core Web API (5080)]
 
   BE -->|EF Core DbContext| EF[EF Core 7]
