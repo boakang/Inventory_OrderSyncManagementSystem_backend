@@ -137,13 +137,13 @@ Tồn kho “hiện tại” được lấy từ `Products.StockQuantity` (sourc
 flowchart LR
   U[User/Browser] -->|UI actions| FE[Frontend: Vite + React :3000]
   FE -->|HTTP JSON: /api/*| VP[Vite Proxy]
-  VP -->|Forward| BE[Backend: ASP.NET Core Web API :5080]
+  VP -->|Forward| BE[Backend: ASP NET Core Web API (5080)]
 
   BE -->|EF Core DbContext| EF[EF Core 7]
-  EF -->|SQL queries/transactions| DB[(SQL Server: InventoryOrderDB)]
+  EF -->|SQL queries/transactions| DB[(SQL Server (InventoryOrderDB))]
 
   DB -->|Tables + Constraints + Indexes| DB
-  DB -->|Views/Functions/SP (optional)| DB
+  DB -->|Views + Functions + SP (optional)| DB
 
   BE -->|DTO JSON response| FE
 ```
