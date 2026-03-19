@@ -135,19 +135,18 @@ Tồn kho “hiện tại” được lấy từ `Products.StockQuantity` (sourc
 
 ```mermaid
 flowchart LR
-  U[User/Browser] -->|UI actions| FE[Frontend: Vite + React :3000]
-  FE -->|HTTP JSON| VP[Vite Proxy]
-  FE -.-> N[API base path: /api]
-  VP -->|Forward| BE[Backend: ASP NET Core Web API (5080)]
-
-  BE -->|EF Core DbContext| EF[EF Core 7]
-  EF -->|SQL queries/transactions| DB[(SQL Server (InventoryOrderDB))]
-
-  DB -->|Tables + Constraints + Indexes| DB
-  DB -->|Views + Functions + SP (optional)| DB
-
-  BE -->|DTO JSON response| FE
+  U[User] --> FE[Frontend]
+  FE --> BE[Backend API]
+  BE --> EF[EF Core]
+  EF --> DB[(SQL Server)]
 ```
+
+Ghi chú nhanh:
+
+- Frontend dev server: `http://localhost:3000`
+- Backend API: `http://127.0.0.1:5080`
+- Frontend gọi API qua base path: `/api` (Vite proxy forward sang backend)
+- Backend truy cập DB qua EF Core DbContext (connection string trong `appsettings.json`)
 
 ### 2) Luồng Adjust Inventory (không cho stock âm)
 
