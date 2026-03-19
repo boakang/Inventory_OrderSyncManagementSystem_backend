@@ -129,6 +129,66 @@ Lưu ý: lịch sử tồn kho (`InventoryTransactions`) hiện lưu `Quantity` 
 
 Tồn kho “hiện tại” được lấy từ `Products.StockQuantity` (source of truth). API inventory trả thêm view-friendly fields (product/category/supplier) để frontend không phải join nhiều request.
 
+## Sơ đồ hoạt động
+
+### 1) Tổng quan luồng dữ liệu (Frontend ↔ Backend ↔ SQL Server)
+
+```mermaid
+flowchart LR
+  U[User/Browser] -->|UI actions| FE[Frontend: Vite + React :3000]
+  FE -->|HTTP JSON: /api/*| VP[Vite Proxy]
+  VP -->|Forward| BE[Backend: ASP.NET Core Web API :5080]
+
+  BE -->|EF Core DbContext| EF[EF Core 7]
+  EF -->|SQL queries/transactions| DB[(SQL Server: InventoryOrderDB)]
+
+  DB -->|Tables + Constraints + Indexes| DB
+  DB -->|Views/Functions/SP (optional)| DB
+
+  BE -->|DTO JSON response| FE
+```
+
+### 2) Luồng Adjust Inventory (không cho stock âm)
+
+```mermaid
+sequenceDiagram
+  participant U as User
+  participant FE as Frontend
+  participant API as Backend API
+  participant EF as EF Core
+  participant DB as SQL Server
+
+  U->>FE: Nhập TransactionType + Quantity
+  FE->>API: POST /api/inventory (JSON)
+  API->>API: Validate Quantity >= 0
+  API->>EF: Load Product + current StockQuantity
+  EF->>DB: SELECT Product
+  DB-->>EF: Current stock
+  API->>API: Tính delta (+/-) theo TransactionType
+  API->>API: Nếu stock + delta < 0 => reject
+  API->>EF: INSERT InventoryTransaction + UPDATE Product.StockQuantity
+  EF->>DB: INSERT + UPDATE (FK/constraints enforced)
+  DB-->>EF: OK
+  EF-->>API: Saved
+  API-->>FE: 200 OK
+```
+
+### 3) Dev utilities: Reset data (giữ schema) + Seed reference data
+
+```mermaid
+flowchart TD
+  A[Developer] -->|POST /api/dev/reset| R[DevResetController]
+  R -->|Delete data theo thứ tự FK-safe| D[Transactional tables cleared]
+  R -->|Optional: reseed identities| I[DBCC CHECKIDENT]
+  R -->|preserveReferenceData=true| P[Keep Categories/Suppliers]
+
+  A -->|POST /api/dev/seed| S[DevSeedController]
+  S -->|Upsert/insert reference data| C[Categories/Suppliers ensured]
+
+  D --> API[App continues on same schema]
+  C --> API
+```
+
 ## API Endpoints
 
 Base path: `/api/*`
